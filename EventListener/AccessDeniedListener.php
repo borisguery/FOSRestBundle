@@ -12,7 +12,9 @@
 namespace FOS\RestBundle\EventListener;
 
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\EventListener\ExceptionListener;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 /**
@@ -20,36 +22,38 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
  * will return a 403 regardless of how the firewall is configured
  *
  * @author Lukas Kahwe Smith <smith@pooteeweet.org>
+ * @author Boris Guéry <guery.b@gmail.com>
  */
-class AccessDeniedListener
+class AccessDeniedListener extends ExceptionListener
 {
-    private $formats;
-
-    /**
-     * Constructor.
-     *
-     * @param ContainerInterface $container             container
-     * @param boolean            $setParamsAsAttributes params as attributes
-     */
-    public function __construct($formats = array())
-    {
-        $this->formats = $formats;
-    }
-
     /**
      * @param GetResponseForExceptionEvent $event The event
      */
     public function onKernelException(GetResponseForExceptionEvent $event)
     {
+        static $handling;
+
+        if (true === $handling) {
+            return false;
+        }
+
+        $handling = true;
+
         $exception = $event->getException();
         if (!$exception instanceof AccessDeniedException) {
             return;
         }
 
-        $request = $event->getRequest();
-        if (!empty($this->formats[$request->getRequestFormat()])) {
-            $response = new Response('You dont have the necessary permissions', 403);
-            $event->setResponse($response);
-        }
+        $exception = new AccessDeniedHttpException("You don't have the necessary permissions", $exception);
+        $event->setException($exception);
+
+        return parent::onKernelException($event);
+    }
+
+    public static function getSubscribedEvents()
+    {
+        return array(
+            KernelEvents::EXCEPTION => array('onKernelException', 5),
+        );
     }
 }
