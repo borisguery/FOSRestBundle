@@ -47,6 +47,7 @@ class FOSRestExtension extends Extension
                 $formats[$format] = false;
             }
         }
+
         foreach ($config['view']['templating_formats'] as $format => $enabled) {
             if ($enabled) {
                 $formats[$format] = true;
@@ -131,6 +132,19 @@ class FOSRestExtension extends Extension
         } else {
             $container->setParameter($this->getAlias().'.mime_types', array());
         }
+
+        $serializationFormats = array();
+        foreach ($config['view']['serialization_formats'] as $registeredMimeType => $serializationFormat) {
+            if (isset($config['view']['mime_types'][$registeredMimeType])) {
+                foreach ($config['view']['mime_types'][$registeredMimeType] as $mimeType) {
+                    $serializationFormats[$mimeType] = $serializationFormat;
+                }
+            } else {
+                $serializationFormats[$registeredMimeType] = $serializationFormat;
+            }
+        }
+
+        $container->setParameter($this->getAlias().'.serialization_formats', $serializationFormats);
 
         if (!empty($config['param_fetcher_listener'])) {
             $loader->load('param_fetcher_listener.xml');

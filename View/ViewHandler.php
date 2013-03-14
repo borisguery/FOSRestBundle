@@ -68,6 +68,11 @@ class ViewHandler extends ContainerAware implements ViewHandlerInterface
     protected $defaultEngine;
 
     /**
+     * @var array Map of MimeType => Serialization format used by the JMSSerializer lib
+     */
+    protected $serializationFormats;
+
+    /**
      * Constructor
      *
      * @param array   $formats              the supported formats as keys and if the given formats uses templating is denoted by a true value
@@ -76,6 +81,7 @@ class ViewHandler extends ContainerAware implements ViewHandlerInterface
      * @param Boolean $serializeNull        Whether or not to serialize null view data
      * @param array   $forceRedirects       If to force a redirect for the given key format, with value being the status code to use
      * @param string  $defaultEngine        default engine (twig, php ..)
+     * @param array   $serializationFormats Map of MimeType => Serialization format used by the JMSSerializer lib
      */
     public function __construct(
         array $formats = null,
@@ -83,7 +89,8 @@ class ViewHandler extends ContainerAware implements ViewHandlerInterface
         $emptyContentCode = Codes::HTTP_NO_CONTENT,
         $serializeNull = false,
         array $forceRedirects = null,
-        $defaultEngine = 'twig'
+        $defaultEngine = 'twig',
+        array $serializationFormats = array()
     ) {
         $this->formats = (array) $formats;
         $this->failedValidationCode = $failedValidationCode;
@@ -91,6 +98,7 @@ class ViewHandler extends ContainerAware implements ViewHandlerInterface
         $this->serializeNull = $serializeNull;
         $this->forceRedirects = (array) $forceRedirects;
         $this->defaultEngine = $defaultEngine;
+        $this->serializationFormats = $serializationFormats;
     }
 
     /**
@@ -356,7 +364,9 @@ class ViewHandler extends ContainerAware implements ViewHandlerInterface
             $content = $this->renderTemplate($view, $format);
         } elseif ($this->serializeNull || null !== $view->getData()) {
             $serializer = $this->getSerializer($view);
-            $content = $serializer->serialize($view->getData(), $format);
+
+            $serializationFormat = $this->getSerializationFormatForMimeType($request->getMimeType($format), $format);
+            $content = $serializer->serialize($view->getData(), $serializationFormat);
         }
 
         $response = $view->getResponse();
@@ -371,5 +381,15 @@ class ViewHandler extends ContainerAware implements ViewHandlerInterface
         }
 
         return $response;
+    }
+
+    protected function getSerializationFormatForMimeType($mimeType, $default)
+    {
+        if (isset($this->serializationFormats[$mimeType])) {
+
+            return $this->serializationFormats[$mimeType];
+        }
+
+        return $default;
     }
 }
