@@ -383,7 +383,7 @@ class ViewHandler extends ContainerAware implements ViewHandlerInterface
         return $response;
     }
 
-    protected function getSerializationFormatForMimeType($mimeType, $default)
+    public function getSerializationFormatForMimeType($mimeType, $default)
     {
         if (isset($this->serializationFormats[$mimeType])) {
 
