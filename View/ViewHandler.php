@@ -220,7 +220,7 @@ class ViewHandler extends ContainerAware implements ViewHandlerInterface
             }
         }
 
-        $serializeNull = $this->container->getParameter('fos_rest.serializer.serialize_null');
+        $serializeNull = $this->container->getParameter('fos_rest.serialize_null');
         $context->setSerializeNull($serializeNull);
 
         return $context;

@@ -277,7 +277,7 @@ class ViewHandlerTest extends \PHPUnit_Framework_TestCase
         $map = array(
             array('fos_rest.serializer.exclusion_strategy.groups', 'foo'),
             array('fos_rest.serializer.exclusion_strategy.version', '1.0'),
-            array('fos_rest.serializer.serialize_null', $serializeNull)
+            array('fos_rest.serialize_null', $serializeNull)
         );
 
         $container
